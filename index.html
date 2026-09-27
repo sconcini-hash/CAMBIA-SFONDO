@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cambia Sfondo</title>
+  <meta name="description" content="Tocca un colore per cambiare lo sfondo.">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sfondo">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --btn-size: 100px;
+      --border-w: 5px;
+      --gap: 32px;
+      --yellow: #FFD600;
+      --green: #00C853;
+      --red: #F44336;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1a1a1a; }
+    }
+
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s ease;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .buttons {
+      display: flex;
+      gap: var(--gap);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      width: var(--btn-size);
+      height: var(--btn-size);
+      border: var(--border-w) solid #000;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      padding: 0;
+      outline: none;
+    }
+    .btn:hover { transform: scale(1.1); }
+    .btn:active { transform: scale(0.95); }
+    .btn:focus-visible { box-shadow: 0 0 0 3px rgba(0,0,0,0.4); }
+
+    .btn[data-color="yellow"] { background: var(--yellow); }
+    .btn[data-color="green"]  { background: var(--green); }
+    .btn[data-color="red"]    { background: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="buttons">
+    <button class="btn" data-color="yellow" aria-label="Sfondo giallo"></button>
+    <button class="btn" data-color="green"  aria-label="Sfondo verde"></button>
+    <button class="btn" data-color="red"    aria-label="Sfondo rosso"></button>
+  </div>
+
+  <script>
+    const COLORS = { yellow: '#FFD600', green: '#00C853', red: '#F44336' };
+    const STORAGE_KEY = 'cambia-sfondo:colore';
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+    function applyColor(name) {
+      const hex = COLORS[name];
+      if (!hex) return;
+      document.body.style.backgroundColor = hex;
+      themeMeta.setAttribute('content', hex);   // colora anche la barra del browser
+      try { localStorage.setItem(STORAGE_KEY, name); } catch (e) {}
+    }
+
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', () => applyColor(btn.dataset.color));
+    });
+
+    // Ripristina l'ultimo colore scelto
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) applyColor(saved);
+    } catch (e) {}
+
+    // Service worker: funzionamento offline e installazione
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(console.error);
+      });
+    }
+  </script>
+</body>
+</html>
